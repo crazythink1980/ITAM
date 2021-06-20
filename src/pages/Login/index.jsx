@@ -12,18 +12,47 @@ import './index.less'
 
 class Login extends Component {
 
+    onFinish = (values) => {
+        console.log('Received values of form: ', values);
+    }
+
     render() {
         return (
             <div className="login">
                 <div className="login-content">
                     <h2>IT资产管理系统</h2>
-                    <Form className="login-form">
-                        <Form.Item>
-                            <Input placeholder="用户名" prefix={<UserOutlined />} />
+                    <Form
+                        name="normal_login"
+                        className="login-form"
+                        onFinish={this.onFinish}
+                    >
+                        <Form.Item
+                            name="username"
+                            rules={[
+                                {
+                                    required: true,
+                                    message: '请输入用户名',
+                                },
+                            ]}
+                        >
+                            <Input prefix={<UserOutlined className="site-form-item-icon" />} placeholder="用户名" />
                         </Form.Item>
-                        <Form.Item>
-                            <Input placeholder="密码" type="password" prefix={<LockOutlined />} />
+                        <Form.Item
+                            name="password"
+                            rules={[
+                                {
+                                    required: true,
+                                    message: '请输入密码',
+                                },
+                            ]}
+                        >
+                            <Input
+                                prefix={<LockOutlined className="site-form-item-icon" />}
+                                type="password"
+                                placeholder="密码"
+                            />
                         </Form.Item>
+
                         <Form.Item>
                             <Button type="primary" htmlType="submit" className="login-form-button">
                                 登录
