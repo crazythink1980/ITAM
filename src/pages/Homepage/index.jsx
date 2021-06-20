@@ -1,59 +1,50 @@
-import React from 'react';
+import React from 'react'
 import { Redirect } from 'react-router-dom'
-import { Layout, Table } from 'antd';
+import { Layout, Menu, Breadcrumb } from 'antd'
+import {
+    DesktopOutlined,
+    PieChartOutlined,
+    FileOutlined,
+    TeamOutlined,
+    UserOutlined,
+} from '@ant-design/icons'
 import memoryUtils from '../../utils/memoryUtils'
+import LeftNav from '../../components/left-nav'
+import Header from '../../components/header'
 
-const { Header, Content } = Layout;
-
-const dataSource = [
-    {
-        key: '1',
-        name: '胡彦斌',
-        age: 32,
-        address: '西湖区湖底公园1号',
-    },
-    {
-        key: '2',
-        name: '胡彦祖',
-        age: 42,
-        address: '西湖区湖底公园1号',
-    },
-];
-
-const columns = [
-    {
-        title: '姓名',
-        dataIndex: 'name',
-        key: 'name',
-    },
-    {
-        title: '年龄',
-        dataIndex: 'age',
-        key: 'age',
-    },
-    {
-        title: '住址',
-        dataIndex: 'address',
-        key: 'address',
-    },
-];
+const { Content, Footer, Sider } = Layout;
+const { SubMenu } = Menu;
 
 class Homepage extends React.Component {
-    render() {
-        const { user } = memoryUtils
-        if (!user || !user.access_token)
-            return <Redirect to='/login' />
-        return (
-            <Layout>
-                <Header>
-                    <div style={{ lineHeight: '64px', fontSize: "20px", color: "white", textAlign: "center" }}>
-                        拉布拉卡 - 卡片管理系统--{memoryUtils.user.username}
-                    </div>
-                </Header>
+    state = {
+        collapsed: false,
+    };
 
-                <Content >
-                    <Table dataSource={dataSource} columns={columns} />
-                </Content>
+    onCollapse = collapsed => {
+        console.log(collapsed);
+        this.setState({ collapsed });
+    };
+
+    render() {
+        const { collapsed } = this.state;
+        return (
+            <Layout style={{ minHeight: '100vh' }}>
+                <Sider collapsible collapsed={collapsed} onCollapse={this.onCollapse}>
+                    <LeftNav />
+                </Sider>
+                <Layout className="site-layout">
+                    <Header />
+                    <Content style={{ margin: '0 16px' }}>
+                        <Breadcrumb style={{ margin: '16px 0' }}>
+                            <Breadcrumb.Item>User</Breadcrumb.Item>
+                            <Breadcrumb.Item>Bill</Breadcrumb.Item>
+                        </Breadcrumb>
+                        <div className="site-layout-background" style={{ padding: 24, minHeight: 360 }}>
+                            Bill is a cat.
+                        </div>
+                    </Content>
+                    <Footer style={{ textAlign: 'center' }}>Ant Design ©2018 Created by Ant UED</Footer>
+                </Layout>
             </Layout>
         );
     }
