@@ -1,6 +1,10 @@
 import axios from 'axios'
 import { message } from 'antd'
 
+const headerJSON = {
+    "Content-Type": "application/json"
+};
+
 export default function ajax(url, data = {}, type = 'GET') {
 
     return new Promise((resolve, reject) => {
@@ -10,7 +14,7 @@ export default function ajax(url, data = {}, type = 'GET') {
                 params: data
             })
         } else {
-            promise = axios.post(url, data)
+            promise = axios.post(url, JSON.stringify(data), { headerJSON })
         }
         promise.then(response => {
             resolve(response.data)
