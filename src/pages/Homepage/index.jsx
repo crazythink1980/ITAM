@@ -1,19 +1,13 @@
 import React from 'react'
 import { Redirect } from 'react-router-dom'
-import { Layout, Menu, Breadcrumb } from 'antd'
-import {
-    DesktopOutlined,
-    PieChartOutlined,
-    FileOutlined,
-    TeamOutlined,
-    UserOutlined,
-} from '@ant-design/icons'
+import { Layout, Breadcrumb } from 'antd'
+
 import memoryUtils from '../../utils/memoryUtils'
 import LeftNav from '../../components/left-nav'
 import Header from '../../components/header'
 
 const { Content, Footer, Sider } = Layout;
-const { SubMenu } = Menu;
+
 
 class Homepage extends React.Component {
     state = {
@@ -27,6 +21,9 @@ class Homepage extends React.Component {
 
     render() {
         const { collapsed } = this.state;
+        const { user } = memoryUtils
+        if (!user.access_token)
+            return <Redirect to='/login' />
         return (
             <Layout style={{ minHeight: '100vh' }}>
                 <Sider collapsible collapsed={collapsed} onCollapse={this.onCollapse}>
