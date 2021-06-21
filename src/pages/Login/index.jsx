@@ -19,7 +19,6 @@ class Login extends Component {
         console.log('Received values of form: ', values);
         const { username, password } = values
         const result = await reqLogin(username, password)
-        //console.log('login()', result)
         if (result.code === "success") {
             // 提示登录成功 
             message.success('登录成功', 2)
@@ -36,6 +35,7 @@ class Login extends Component {
 
     render() {
         const { user } = memoryUtils
+        //如果存在有access_token，就表明已经登录
         if (user.access_token)
             return <Redirect to='/' />
         return (

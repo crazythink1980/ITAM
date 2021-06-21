@@ -18,18 +18,23 @@ const menuList = [
         icon: <HomeOutlined />, // 图标名称 
     },
     {
-        title: '商品',
-        key: '/products',
+        title: '资产',
+        key: '/assets',
         icon: <AppstoreOutlined />,
         children: [ // 子菜单列表 
             {
-                title: '品类管理',
-                key: '/category',
+                title: '资产类别',
+                key: '/assets/category',
                 icon: <BarsOutlined />
             },
             {
-                title: '商品管理',
-                key: '/product',
+                title: '资产位置',
+                key: '/assets/place',
+                icon: <ToolOutlined />
+            },
+            {
+                title: '资产管理',
+                key: '/assets/asset',
                 icon: <ToolOutlined />
             },
         ]

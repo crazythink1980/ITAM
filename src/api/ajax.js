@@ -14,7 +14,7 @@ export default function ajax(url, data = {}, type = 'GET') {
                 params: data
             })
         } else {
-            promise = axios.post(url, JSON.stringify(data), { headerJSON })
+            promise = axios.post(url, JSON.stringify(data), { headers: headerJSON })
         }
         promise.then(response => {
             resolve(response.data)
