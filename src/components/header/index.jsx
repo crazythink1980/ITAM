@@ -3,6 +3,7 @@ import { withRouter } from 'react-router-dom'
 import { Modal } from 'antd'
 import memoryUtils from '../../utils/memoryUtils'
 import storageUtils from '../../utils/storageUtils'
+import menuList from '../../config/menuConfig'
 import LinkButton from '../LinkButton';
 
 import './index.less'
@@ -12,6 +13,24 @@ class Header extends Component {
 
     state = {
         curTime: ''
+    }
+
+    getTitle = () => {
+        let title
+        const { pathname } = this.props.location
+        menuList.forEach(item => {
+            if (item.key === pathname) {
+                title = item.title
+            }
+            else if (item.children) {
+                const cItem = item.children.find(cItem => cItem.key === pathname)
+                if (cItem) {
+                    title = cItem.title
+                }
+
+            }
+        })
+        return title
     }
 
     //退出登录
@@ -27,6 +46,7 @@ class Header extends Component {
     }
 
     componentDidMount() {
+        //使用定时器获取当前时间并格式化
         this.intervalId = setInterval(() => {
             const myDate = new Date()
             const curTime = myDate.getFullYear() +
@@ -47,6 +67,7 @@ class Header extends Component {
     render() {
         const { curTime } = this.state
         const { username } = memoryUtils.user
+        const title = this.getTitle()
         return (
             <div className='header'>
                 <div className='header-top'>
@@ -55,7 +76,7 @@ class Header extends Component {
                 </div>
                 <div className='header-bottom'>
                     <div className='header-bottom-left'>
-                        <span>首页</span>
+                        <span>{title}</span>
                     </div>
                     <div className='header-bottom-right'>
                         <span>{curTime}</span>

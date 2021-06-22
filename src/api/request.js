@@ -70,8 +70,15 @@ export const request = (api, method = 'GET', params = {}, config = {}) => {
             resolve(response.data)
         })
             .catch(error => {
-                console.dir(error);
-                message.error('请求出错了: ' + error.response.data.message);
+                if (error.response.status === 401) {
+                    console.log('已过期重新登陆', error.response.data)
+                    //window.location.href = '/login'
+                }
+
+                else {
+                    message.error('请求出错了: ' + error.response.data.message);
+                }
+
                 //reject(error);
             });
     });

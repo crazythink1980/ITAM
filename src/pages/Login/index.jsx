@@ -16,7 +16,6 @@ import storageUtils from '../../utils/storageUtils'
 class Login extends Component {
 
     onFinish = async (values) => {
-        console.log('Received values of form: ', values);
         const { username, password } = values
         const result = await reqLogin(username, password)
         if (result.code === "success") {
