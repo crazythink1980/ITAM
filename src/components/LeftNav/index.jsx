@@ -9,6 +9,8 @@ import menuList from '../../config/menuConfig';
 const { SubMenu } = Menu;
 
 class LeftNav extends Component {
+
+    //根据menuList动态生成菜单项
     getMenuNodes = (menuList) => {
         const { pathname } = this.props.location
         return menuList.map(item => {
@@ -38,10 +40,7 @@ class LeftNav extends Component {
         })
     }
 
-    constructor(props) {
-        super(props)
-        this.menuNodes = this.getMenuNodes(menuList)
-    }
+    menuNodes = this.getMenuNodes(menuList)
 
     render() {
         const { collapsed } = this.props;
