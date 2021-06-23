@@ -86,8 +86,11 @@ class Category extends Component {
         this.setState({ showStatus: 1 })
     }
     //增加分类
-    addCategory = () => {
+    addCategory = (values) => {
         console.log('增加分类')
+
+        const { parentId, categoryName } = values
+        console.log(parentId, categoryName)
 
         this.setState({ showStatus: 0 })
     }
@@ -95,16 +98,17 @@ class Category extends Component {
     //显示更新分类对话框
     showUpdate = (category) => {
         this.category = category
-        this.fromUpdateRef.current.setFieldsValue({
-            categoryName: category.name,
+        this.setState({ showStatus: 2 }, () => {
+            this.fromUpdateRef.current.setFieldsValue({
+                categoryName: category.name,
+            })
         })
-        this.setState({ showStatus: 2 })
     }
     //更新分类
-    updateCategory = () => {
+    updateCategory = (values) => {
         console.log('更新分类')
 
-        const categoryName = this.fromUpdateRef.current.getFieldValue('categoryName')
+        const categoryName = values.categoryName
         console.log(categoryName)
 
         this.setState({ showStatus: 0 })
@@ -146,32 +150,61 @@ class Category extends Component {
                     columns={this.columns} />
                 <Modal title="添加分类"
                     visible={showStatus === 1}
-                    onOk={this.addCategory}
-                    onCancel={this.handleCancel}>
-                    <Form ref={this.fromUpdateRef}>
-                        <Item>
+                    onCancel={this.handleCancel}
+                    footer={null}
+                >
+                    <Form ref={this.fromUpdateRef} onFinish={this.addCategory}>
+                        <Item name="parentId" initialValue='0'>
                             <Select>
                                 <Option value='0'>
-                                    AAAA
+                                    一级分类
                                 </Option>
                             </Select>
                         </Item>
-                        <Item>
+                        <Item name="categoryName">
                             <Input />
+                        </Item>
+                        <Item style={{ textAlign: 'right' }}>
+                            <Button onClick={this.handleCancel} style={{ marginRight: 16 }}>
+                                取消
+                            </Button>
+                            <Button type="primary" htmlType="submit">
+                                确定
+                            </Button>
                         </Item>
                     </Form>
                 </Modal>
                 <Modal title="更新分类"
                     visible={showStatus === 2}
-                    onOk={this.updateCategory}
-                    onCancel={this.handleCancel}>
-                    <Form ref={this.fromUpdateRef}>
-                        <Item name="categoryName">
+                    onCancel={this.handleCancel}
+                    footer={null}
+                >
+                    <Form ref={this.fromUpdateRef} onFinish={this.updateCategory}>
+                        <Item name="categoryName"
+                            rules={[
+                                {
+                                    required: true,
+                                    message: '请输入分类名',
+                                },
+                                {
+                                    max: 20,
+                                    message: '分类名最多20位',
+                                },
+                            ]}
+                        >
                             <Input />
+                        </Item>
+                        <Item style={{ textAlign: 'right' }}>
+                            <Button onClick={this.handleCancel} style={{ marginRight: 16 }}>
+                                取消
+                            </Button>
+                            <Button type="primary" htmlType="submit">
+                                确定
+                            </Button>
                         </Item>
                     </Form>
                 </Modal>
-            </Card>
+            </Card >
         );
     }
 }
