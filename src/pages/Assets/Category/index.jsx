@@ -3,7 +3,7 @@ import { Card, Table, Button, message, Modal, Form, Select, Input } from 'antd'
 import { PlusOutlined, ArrowRightOutlined } from '@ant-design/icons'
 
 import LinkButton from '../../../components/LinkButton';
-import { reqCategorys } from '../../../api'
+import { reqCategorys, reqAddCategory, reqUpdateCategory } from '../../../api'
 
 const Item = Form.Item
 const Option = Select.Option
@@ -14,13 +14,13 @@ class Category extends Component {
         loading: false,
         categorys: [],
         subCategorys: [],
-        parentId: 0,
+        parentId: '0',
         parentName: '',
         showStatus: 0
     }
 
     formAddRef = React.createRef()
-    fromUpdateRef = React.createRef()
+    formUpdateRef = React.createRef()
 
     columns = [
         {
@@ -35,7 +35,8 @@ class Category extends Component {
             render: (category) => (
                 <span>
                     <LinkButton onClick={() => this.showUpdate(category)}>修改分类</LinkButton>
-                    {this.state.parentId === 0 ? <LinkButton onClick={() => this.showSubCategorys(category)}>查看子分类</LinkButton> : null}
+                    {category.hasChildren ? <LinkButton onClick={() => this.showSubCategorys(category)}>查看子分类</LinkButton> :
+                        <LinkButton onClick={() => this.delCategory(category)}>删除分类</LinkButton>}
                 </span>
             ),
         },
@@ -55,21 +56,21 @@ class Category extends Component {
     //返回一级分类列表
     showCategorys = () => {
         this.setState({
-            parentId: 0,
+            parentId: '0',
             parentName: '',
             subCategorys: []
         })
     }
 
     //获取一级/二级分类列表
-    getCategory = async () => {
+    getCategory = async (parent_Id) => {
         this.setState({ loading: true })
-        const { parentId } = this.state
+        const parentId = parent_Id || this.state.parentId
         const result = await reqCategorys(parentId)
         this.setState({ loading: false })
         if (result.code === "success") {
             const categorys = result.asset_type
-            if (parentId === 0) {
+            if (parentId === '0') {
                 this.setState({ categorys })
             } else {
                 this.setState({ subCategorys: categorys })
@@ -83,35 +84,76 @@ class Category extends Component {
 
     //显示增加分类对话框
     showAdd = () => {
-        this.setState({ showStatus: 1 })
+        const { parentId } = this.state
+        this.setState({ showStatus: 1 }, () => {
+            this.formAddRef.current.setFieldsValue({
+                parentId,
+                categoryName: '',
+            })
+        })
     }
     //增加分类
     addCategory = (values) => {
-        console.log('增加分类')
+        this.formAddRef.current.validateFields()
+            .then(async values => {
+                const { parentId, categoryName } = values
+                const result = await reqAddCategory(parentId, categoryName)
+                if (result.code === "success") {
+                    if (parentId === this.state.parentId || this.state.parentId === '0') {
+                        this.getCategory()
+                    }
+                    // if (parentId === '0') {
+                    //     this.getCategory('0')
+                    // }
 
-        const { parentId, categoryName } = values
-        console.log(parentId, categoryName)
+                } else {
+                    message.error('增加分类失败')
+                }
 
-        this.setState({ showStatus: 0 })
+                this.setState({ showStatus: 0 })
+            })
+            .catch(err => {
+
+            })
+
+
     }
 
     //显示更新分类对话框
     showUpdate = (category) => {
         this.category = category
         this.setState({ showStatus: 2 }, () => {
-            this.fromUpdateRef.current.setFieldsValue({
+            this.formUpdateRef.current.setFieldsValue({
                 categoryName: category.name,
             })
         })
     }
     //更新分类
     updateCategory = (values) => {
-        console.log('更新分类')
+        this.formUpdateRef.current.validateFields()
+            .then(async values => {
+                const categoryName = values.categoryName
+                const { id, parent_id, name } = this.category
+                if (categoryName !== name) {
+                    const result = await reqUpdateCategory(id, parent_id, categoryName)
+                    if (result.code === "success") {
+                        this.getCategory()
+                    } else {
+                        message.error('增加分类失败')
+                    }
+                }
 
-        const categoryName = values.categoryName
-        console.log(categoryName)
+                this.setState({ showStatus: 0 })
+            })
+            .catch(err => {
 
-        this.setState({ showStatus: 0 })
+            })
+
+
+    }
+
+    delCategory = (values) => {
+        console.log('删除分类')
     }
 
     //关闭模态对话框
@@ -125,7 +167,7 @@ class Category extends Component {
 
     render() {
         const { categorys, subCategorys, loading, parentId, parentName, showStatus } = this.state
-        const title = parentId === 0 ? '一级分类列表' :
+        const title = parentId === '0' ? '一级分类列表' :
             (
                 <span>
                     <LinkButton onClick={this.showCategorys}>一级分类列表</LinkButton>
@@ -138,7 +180,6 @@ class Category extends Component {
                 添加
             </Button>
         )
-        const category = this.category || {}
 
         return (
             <Card title={title} extra={extra} >
@@ -146,45 +187,28 @@ class Category extends Component {
                     rowKey='id'
                     loading={loading}
                     bordered
-                    dataSource={parentId === 0 ? categorys : subCategorys}
-                    columns={this.columns} />
+                    dataSource={parentId === '0' ? categorys : subCategorys}
+                    columns={this.columns}
+                />
+
                 <Modal title="添加分类"
                     visible={showStatus === 1}
                     onCancel={this.handleCancel}
-                    footer={null}
+                    onOk={this.addCategory}
                 >
-                    <Form ref={this.fromUpdateRef} onFinish={this.addCategory}>
-                        <Item name="parentId" initialValue='0'>
+                    <Form ref={this.formAddRef} >
+                        <Item name="parentId">
                             <Select>
-                                <Option value='0'>
-                                    一级分类
-                                </Option>
+                                <Option value='0'>一级分类</Option>
+                                {categorys.map(c => <Option value={c.id}>{c.name}</Option>)}
                             </Select>
                         </Item>
-                        <Item name="categoryName">
-                            <Input />
-                        </Item>
-                        <Item style={{ textAlign: 'right' }}>
-                            <Button onClick={this.handleCancel} style={{ marginRight: 16 }}>
-                                取消
-                            </Button>
-                            <Button type="primary" htmlType="submit">
-                                确定
-                            </Button>
-                        </Item>
-                    </Form>
-                </Modal>
-                <Modal title="更新分类"
-                    visible={showStatus === 2}
-                    onCancel={this.handleCancel}
-                    footer={null}
-                >
-                    <Form ref={this.fromUpdateRef} onFinish={this.updateCategory}>
-                        <Item name="categoryName"
+                        <Item
+                            name="categoryName"
                             rules={[
                                 {
                                     required: true,
-                                    message: '请输入分类名',
+                                    message: '分类名必须输入',
                                 },
                                 {
                                     max: 20,
@@ -194,13 +218,28 @@ class Category extends Component {
                         >
                             <Input />
                         </Item>
-                        <Item style={{ textAlign: 'right' }}>
-                            <Button onClick={this.handleCancel} style={{ marginRight: 16 }}>
-                                取消
-                            </Button>
-                            <Button type="primary" htmlType="submit">
-                                确定
-                            </Button>
+                    </Form>
+                </Modal>
+                <Modal title="更新分类"
+                    visible={showStatus === 2}
+                    onCancel={this.handleCancel}
+                    onOk={this.updateCategory}
+                >
+                    <Form ref={this.formUpdateRef} >
+                        <Item
+                            name="categoryName"
+                            rules={[
+                                {
+                                    required: true,
+                                    message: '分类名必须输入',
+                                },
+                                {
+                                    max: 20,
+                                    message: '分类名最多20位',
+                                },
+                            ]}
+                        >
+                            <Input />
                         </Item>
                     </Form>
                 </Modal>
