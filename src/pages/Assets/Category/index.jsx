@@ -3,7 +3,7 @@ import { Card, Table, Button, message, Modal, Form, Select, Input } from 'antd'
 import { PlusOutlined, ArrowRightOutlined } from '@ant-design/icons'
 
 import LinkButton from '../../../components/LinkButton';
-import { reqCategorys, reqAddCategory, reqUpdateCategory } from '../../../api'
+import { reqCategorys, reqAddCategory, reqUpdateCategory, reqDelCategory } from '../../../api'
 
 const Item = Form.Item
 const Option = Select.Option
@@ -35,8 +35,8 @@ class Category extends Component {
             render: (category) => (
                 <span>
                     <LinkButton onClick={() => this.showUpdate(category)}>修改分类</LinkButton>
-                    {category.hasChildren ? <LinkButton onClick={() => this.showSubCategorys(category)}>查看子分类</LinkButton> :
-                        <LinkButton onClick={() => this.delCategory(category)}>删除分类</LinkButton>}
+                    {this.state.parentId === '0' ? <LinkButton onClick={() => this.showSubCategorys(category)}>查看子分类</LinkButton> : null}
+                    {category.hasChildren ? null : <LinkButton onClick={() => this.delCategory(category)}>删除分类</LinkButton>}
                 </span>
             ),
         },
@@ -152,8 +152,23 @@ class Category extends Component {
 
     }
 
-    delCategory = (values) => {
-        console.log('删除分类')
+    //删除分类
+    delCategory = (category) => {
+        Modal.confirm({
+            title: '确认删除',
+            content: '确定删除分类：' + category.name + '？',
+            okText: '确定 ',
+            cancelText: '取消',
+            onOk: async () => {
+                const { id } = category
+                const result = await reqDelCategory(id)
+                if (result.code === "success") {
+                    this.getCategory()
+                } else {
+                    message.error('删除分类失败')
+                }
+            }
+        })
     }
 
     //关闭模态对话框
@@ -192,6 +207,8 @@ class Category extends Component {
                 />
 
                 <Modal title="添加分类"
+                    okText="确定"
+                    cancelText="取消"
                     visible={showStatus === 1}
                     onCancel={this.handleCancel}
                     onOk={this.addCategory}
@@ -216,11 +233,13 @@ class Category extends Component {
                                 },
                             ]}
                         >
-                            <Input />
+                            <Input placeholder='请输入分类名称' />
                         </Item>
                     </Form>
                 </Modal>
                 <Modal title="更新分类"
+                    okText="确定"
+                    cancelText="取消"
                     visible={showStatus === 2}
                     onCancel={this.handleCancel}
                     onOk={this.updateCategory}
