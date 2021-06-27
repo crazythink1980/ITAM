@@ -4,35 +4,144 @@ import {
     Select,
     Input,
     Button,
-    Table
+    Table,
+    Tag,
+    message
 } from 'antd'
 import { PlusOutlined } from '@ant-design/icons'
 
+import { reqAssets, reqAsset } from '../../../../api'
+
 const Option = Select.Option
+const asset_types = {
+    PC: 'PC',
+    Printer: '网络打印机',
+    Server: '服务器',
+    NetDevice: '网络设备',
+    SecDevice: '安全设备',
+    Software: '软件'
+}
+const PAGE_SIZE = 3
 
 class AssetHome extends Component {
 
     state = {
-        assets: []
+        assets: [],
+        total: 0,
+        pageNum: 1,
+        loading: false
     }
 
     columns = [
+        {
+            title: '序号',
+            render: (text, record, index) => `${(this.state.pageNum - 1) * PAGE_SIZE + (index + 1)}`,//当前页数减1乘以每一页页数再加当前页序号+1
+        },
+        {
+            title: '资产类型',
+            dataIndex: 'type',
+            render: (type) => asset_types[type]
+        },
         {
             title: '资产名称',
             dataIndex: 'name',
         },
         {
-            title: '年龄',
-            dataIndex: 'age',
+            title: '型号',
+            dataIndex: 'model',
         },
         {
-            title: '住址',
-            dataIndex: 'address',
+            title: '生产厂家',
+            dataIndex: 'manufactory',
+        },
+        {
+            title: '资产位置',
+            dataIndex: 'place',
+        },
+        {
+            title: '使用部门',
+            dataIndex: 'use_dept',
+        },
+        {
+            title: '管理人',
+            dataIndex: 'manage_user',
+        },
+        {
+            title: '状态',
+            dataIndex: 'status',
+            render: (status) => {
+                return (
+                    <span>
+                        {status === 1 ? <Tag color="success">使用中</Tag> : <Tag color="warning">停止使用</Tag>}
+                    </span>
+                )
+            }
+        },
+        {
+            title: '操作',
+            dataIndex: 'id',
+            render: (id) => {
+                return (
+                    <span>
+                        <Button type='link' onClick={() => { this.handleAssetDetail(id) }}>详情</Button>
+                        <Button type='link' onClick={() => { this.handleAssetAddUpdate(id) }}>修改</Button>
+                    </span>
+
+                )
+
+            }
         },
     ];
 
+    getAssets = async (pageNum) => {
+        this.setState({ loading: true })
+        const result = await reqAssets(pageNum, PAGE_SIZE)
+        this.setState({ loading: false })
+        if (result.code === "success") {
+            const { list, total } = result.data
+
+            this.setState({
+                total,
+                pageNum,
+                assets: list
+            })
+        }
+        else {
+            message.error('获取资产列表失败')
+        }
+
+    }
+
+    getAssetDetail = async (id) => {
+        const result = await reqAsset(id)
+        if (result.code === "success") {
+            return result.data
+        }
+        else {
+            message.error('获取资产详情失败')
+        }
+    }
+
+    handleAssetDetail = async (id) => {
+        const asset = await this.getAssetDetail(id)
+        if (asset) {
+            this.props.history.push('/assets/asset/detail', asset)
+        }
+    }
+
+    handleAssetAddUpdate = async (id) => {
+        const asset = await this.getAssetDetail(id)
+        if (asset) {
+            this.props.history.push('/assets/asset/addupdate', asset)
+        }
+    }
+
+    componentDidMount() {
+        this.getAssets(1)
+    }
+
     render() {
-        const { assets } = this.state
+        const { assets, total, loading } = this.state
         const title = (
             <span>
                 <Select value='1' style={{ width: 150 }}>
@@ -40,12 +149,12 @@ class AssetHome extends Component {
                     <Option value='2'>按描述搜索</Option>
                 </Select>
                 <Input placeholder='关键字' style={{ width: 120, margin: '0 15px' }} />
-                <Button type='primary'>搜索</Button>
+                <Button type='primary' >搜索</Button>
             </span>
         )
 
         const extra = (
-            <Button type='primary' icon={<PlusOutlined />} >
+            <Button type='primary' icon={<PlusOutlined />} onClick={() => { this.props.history.push('/assets/asset/addupdate') }}>
                 添加
             </ Button>
         )
@@ -53,8 +162,16 @@ class AssetHome extends Component {
             <Card title={title} extra={extra}>
                 <Table
                     rowKey='id'
+                    bordered
+                    loading={loading}
                     dataSource={assets}
                     columns={this.columns}
+                    pagination={{
+                        defaultPageSize: PAGE_SIZE,
+                        showQuickJumper: true,
+                        total,
+                        onChange: this.getAssets
+                    }}
                 />
             </Card>
         );

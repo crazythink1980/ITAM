@@ -23,6 +23,25 @@ const menuList = [
         icon: <AppstoreOutlined />,
         children: [ // 子菜单列表 
             {
+                title: '资产管理',
+                key: '/assets/asset',
+                icon: <ToolOutlined />
+            },
+            {
+                title: '资产管理',
+                key: '/assets/asset/detail',
+                hidden: true,
+                selectKey: '/assets/asset',
+                openKey: '/assets'
+            },
+            {
+                title: '资产管理',
+                key: '/assets/asset/addupdate',
+                hidden: true,
+                selectKey: '/assets/asset',
+                openKey: '/assets'
+            },
+            {
                 title: '资产类别',
                 key: '/assets/category',
                 icon: <BarsOutlined />
@@ -32,11 +51,7 @@ const menuList = [
                 key: '/assets/place',
                 icon: <ToolOutlined />
             },
-            {
-                title: '资产管理',
-                key: '/assets/asset',
-                icon: <ToolOutlined />
-            },
+
         ]
     },
     {

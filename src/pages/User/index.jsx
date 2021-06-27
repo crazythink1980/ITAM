@@ -13,7 +13,7 @@ class User extends Component {
 
     render() {
 
-        this.getUserList()
+        //this.getUserList()
         return (
             <div>
 

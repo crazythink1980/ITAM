@@ -12,12 +12,21 @@ const Option = Select.Option
 class Category extends Component {
     state = {
         loading: false,
-        categorys: [],
+
         subCategorys: [],
         parentId: '0',
         parentName: '',
         showStatus: 0
     }
+
+    categorys = [
+        { id: 'PC', name: 'PC终端', parent_id: '0' },
+        { id: 'Printer', name: '网络打印机', parent_id: '0' },
+        { id: 'Server', name: '服务器', parent_id: '0' },
+        { id: 'NetDevice', name: '网络设备', parent_id: '0' },
+        { id: 'SecDevice', name: '安全设备', parent_id: '0' },
+        { id: 'Software', name: '软件', parent_id: '0' },
+    ];
 
     formAddRef = React.createRef()
     formUpdateRef = React.createRef()
@@ -34,9 +43,9 @@ class Category extends Component {
             width: 300,
             render: (category) => (
                 <span>
-                    <LinkButton onClick={() => this.showUpdate(category)}>修改分类</LinkButton>
+                    {this.state.parentId === '0' ? null : <LinkButton onClick={() => this.showUpdate(category)}>修改分类</LinkButton>}
                     {this.state.parentId === '0' ? <LinkButton onClick={() => this.showSubCategorys(category)}>查看子分类</LinkButton> : null}
-                    {category.hasChildren ? null : <LinkButton onClick={() => this.delCategory(category)}>删除分类</LinkButton>}
+                    {this.state.parentId === '0' ? null : <LinkButton onClick={() => this.delCategory(category)}>删除分类</LinkButton>}
                 </span>
             ),
         },
@@ -62,20 +71,15 @@ class Category extends Component {
         })
     }
 
-    //获取一级/二级分类列表
-    getCategory = async (parent_Id) => {
+    //获取二级分类列表
+    getCategory = async () => {
         this.setState({ loading: true })
-        const parentId = parent_Id || this.state.parentId
+        const parentId = this.state.parentId
         const result = await reqCategorys(parentId)
         this.setState({ loading: false })
         if (result.code === "success") {
-            const categorys = result.asset_type
-            if (parentId === '0') {
-                this.setState({ categorys })
-            } else {
-                this.setState({ subCategorys: categorys })
-            }
-
+            const categorys = result.data
+            this.setState({ subCategorys: categorys })
         } else {
             message.error('获取分类列表失败')
         }
@@ -84,7 +88,9 @@ class Category extends Component {
 
     //显示增加分类对话框
     showAdd = () => {
-        const { parentId } = this.state
+        let { parentId } = this.state
+        if (parentId === '0')
+            parentId = 'PC'
         this.setState({ showStatus: 1 }, () => {
             this.formAddRef.current.setFieldsValue({
                 parentId,
@@ -99,7 +105,7 @@ class Category extends Component {
                 const { parentId, categoryName } = values
                 const result = await reqAddCategory(parentId, categoryName)
                 if (result.code === "success") {
-                    if (parentId === this.state.parentId || this.state.parentId === '0') {
+                    if (parentId === this.state.parentId && parentId !== '0') {
                         this.getCategory()
                     }
                     // if (parentId === '0') {
@@ -177,11 +183,11 @@ class Category extends Component {
     }
 
     componentDidMount() {
-        this.getCategory()
+        //this.getCategory()
     }
 
     render() {
-        const { categorys, subCategorys, loading, parentId, parentName, showStatus } = this.state
+        const { subCategorys, loading, parentId, parentName, showStatus } = this.state
         const title = parentId === '0' ? '一级分类列表' :
             (
                 <span>
@@ -202,7 +208,7 @@ class Category extends Component {
                     rowKey='id'
                     loading={loading}
                     bordered
-                    dataSource={parentId === '0' ? categorys : subCategorys}
+                    dataSource={parentId === '0' ? this.categorys : subCategorys}
                     columns={this.columns}
                 />
 
@@ -216,8 +222,7 @@ class Category extends Component {
                     <Form ref={this.formAddRef} >
                         <Item name="parentId">
                             <Select>
-                                <Option value='0'>一级分类</Option>
-                                {categorys.map(c => <Option value={c.id}>{c.name}</Option>)}
+                                {this.categorys.map(c => <Option value={c.id}>{c.name}</Option>)}
                             </Select>
                         </Item>
                         <Item
