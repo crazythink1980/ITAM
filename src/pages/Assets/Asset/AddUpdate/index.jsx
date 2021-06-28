@@ -21,7 +21,8 @@ class AssetAddUpdate extends Component {
     state = {
         typeOptions: [],
         placeOptions: [],
-        type: ''
+        type: '',
+        parent: []
     }
 
     initTypeOptions = async () => {
@@ -99,6 +100,19 @@ class AssetAddUpdate extends Component {
         }
     }
 
+    //获取位置列表
+    getPlaces = async (parent_Id) => {
+
+        const result = await reqPlaces(parent_Id)
+
+        if (result.code === "success") {
+            return result.data
+        } else {
+            message.error('获取分类列表失败')
+        }
+
+    }
+
     initPlaceOptions = async () => {
 
         //初始化最顶端父节点
@@ -129,6 +143,8 @@ class AssetAddUpdate extends Component {
             else {
                 parent.unshift({ id: 0, name: 'XX公司' })
             }
+
+            this.setState({ parent })
 
             if (parent.length !== 1) {
                 //遍历parent，读取当前的所有父位置的列表，并形成options（其中最后一个为当前父位置，不用读）
@@ -288,13 +304,20 @@ class AssetAddUpdate extends Component {
     }
 
     render() {
-        const { typeOptions, type, placeOptions } = this.state
+        const { typeOptions, type, placeOptions, parent } = this.state
         const { isUpdate, asset } = this
+
         const types = []
         if (isUpdate) {
             types.push(asset.type)
             if (asset.sub_type) {
                 types.push(asset.sub_type)
+            }
+        }
+        const places = []
+        if (isUpdate) {
+            for (var i = 0; i < parent.length; i++) {
+                places.push(parent[i].id)
             }
         }
         const title = (
@@ -339,13 +362,12 @@ class AssetAddUpdate extends Component {
                     </Item>
 
 
-                    <Item name='places' initialValue={asset.place} label="资产位置" >
+                    <Item name='places' initialValue={places} label="资产位置" >
                         <Cascader
                             placeholder='请选择资产位置'
-                            disabled={isUpdate}
                             options={placeOptions}
                             loadData={this.loadPlaceData}
-                            onChange={this.onPlaceChange}
+                        //onChange={this.onPlaceChange}
                         />
                     </Item>
 
