@@ -24,6 +24,8 @@ export const reqAssets = (pageNum = 1, pageSize = 10, type = 0) => request(BASE 
 export const reqAsset = (id) => request(BASE + '/api/assets/detail', 'GET', { id })
 //增加或更新资产
 export const reqAddOrUpdateAsset = (asset) => request(BASE + '/api/assets', asset.id ? 'PUT' : 'POST', asset)
+//删除资产
+export const reqDelAsset = (id) => request(BASE + '/api/assets', 'DELETE', { id })
 
 //获取资产位置列表
 export const reqPlaces = (parent_id) => request(BASE + '/api/place', 'GET', { parent_id })

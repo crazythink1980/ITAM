@@ -6,11 +6,12 @@ import {
     Button,
     Table,
     Tag,
+    Modal,
     message
 } from 'antd'
 import { PlusOutlined } from '@ant-design/icons'
 
-import { reqAssets, reqAsset } from '../../../../api'
+import { reqAssets, reqAsset, reqDelAsset } from '../../../../api'
 import { PAGE_SIZE, ASSET_TYPES } from '../../../../utils/constant'
 
 const Option = Select.Option
@@ -73,11 +74,13 @@ class AssetHome extends Component {
         {
             title: '操作',
             dataIndex: 'id',
-            render: (id) => {
+            width: 100,
+            render: (id, record, index) => {
                 return (
                     <span>
                         <Button type='link' onClick={() => { this.handleAssetDetail(id) }}>详情</Button>
                         <Button type='link' onClick={() => { this.handleAssetAddUpdate(id) }}>修改</Button>
+                        <Button type='link' onClick={() => { this.handleAssetDelete(record, index) }}>删除</Button>
                     </span>
 
                 )
@@ -127,6 +130,33 @@ class AssetHome extends Component {
         if (asset) {
             this.props.history.push('/assets/asset/addupdate', asset)
         }
+    }
+
+    handleAssetDelete = (asset, index) => {
+        Modal.confirm({
+            title: '确认删除',
+            content: '确定删除资产：' + asset.name + ' ?',
+            okText: '确定 ',
+            cancelText: '取消',
+            onOk: async () => {
+                const result = await reqDelAsset(asset.id)
+                if (result.code === "success") {
+                    message.success('删除资产成功')
+                    const { pageNum, total } = this.state
+                    const current = (pageNum - 1) * PAGE_SIZE + (index + 1)//计算当前被删除的记录是第几条
+                    //如果当前记录不是第一页且是最后一条而且在列表的最顶端,获取并显示上一页列表
+                    if (pageNum !== 1 && current === total && index === 0) {
+                        this.getAssets(pageNum - 1)
+                    }
+                    else {
+                        this.getAssets(pageNum)//获取并显示当前页
+                    }
+
+                } else {
+                    message.error('删除资产失败')
+                }
+            }
+        })
     }
 
     componentDidMount() {
