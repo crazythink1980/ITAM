@@ -3,32 +3,23 @@ import { Card, Form, Input, Cascader, DatePicker, InputNumber, Button, Switch, R
 import { ArrowLeftOutlined } from '@ant-design/icons'
 import moment from 'moment'
 
-import { reqCategorys, reqAddOrUpdateAsset, reqPlaces, reqPlace } from '../../../../api'
+import { reqCategorys, reqAddOrUpdateAsset, reqPlaces } from '../../../../api'
+import { ASSET_TYPES } from '../../../../utils/constant'
 
 const { Item } = Form
-
-const asset_types = {
-    PC: 'PC',
-    Printer: '网络打印机',
-    Server: '服务器',
-    NetDevice: '网络设备',
-    SecDevice: '安全设备',
-    Software: '软件'
-}
 
 class AssetAddUpdate extends Component {
 
     state = {
-        typeOptions: [],
-        placeOptions: [],
-        type: '',
-        parent: []
+        typeOptions: [],//资产类型级联下拉框的Options
+        placeOptions: [],//资产位置级联下拉框的Options
+        type: '',//记录资产类型选中的分类，动态加载对应组件
     }
 
     initTypeOptions = async () => {
         const typeOptions = []
-        for (var key in asset_types) {
-            const option = { value: key, label: asset_types[key], isLeaf: false }
+        for (var key in ASSET_TYPES) {
+            const option = { value: key, label: ASSET_TYPES[key], isLeaf: false }
             typeOptions.push(option)
         }
 
@@ -113,61 +104,49 @@ class AssetAddUpdate extends Component {
 
     }
 
+    //初始化位置级联下拉框的Options
     initPlaceOptions = async () => {
-
         //初始化最顶端父节点
         const placeOptions = [{ value: 0, label: 'XX公司', isLeaf: false }]
 
         //如果是编辑资产
         const { isUpdate, asset } = this
-        if (isUpdate && asset.place) {
-            //生成parent数组，里面记录所有的父位置
-            const parent = []
-            if (asset.place !== 0) {
-                //取得资产对于的位置的详细信息
-                const result = await reqPlace(asset.place)
-                if (result.code === "success") {
-                    let place = result.data
-                    parent.unshift({ id: place.id, name: place.name })
-                    while (place.parent) {
-                        place = place.parent
-                        parent.unshift({ id: place.id, name: place.name })
+        if (isUpdate && asset.place_obj && asset.place_obj.parent_ids && asset.place_obj.parent_ids.length > 1) {
+            const place_id = asset.place_obj.parent_ids
+            //遍历parent，读取当前的所有父位置的列表，并形成options
+            let parentOptions = placeOptions
+            for (let id of place_id) {
+                const places = await this.getPlaces(id)
+                const childOptions = places.map(p => ({
+                    value: p.id,
+                    label: p.name,
+                    isLeaf: !p.hasChildren
+                }))
 
-                    }
-                    parent.unshift({ id: 0, name: 'XX公司' })
-                }
-                else {
-                    message.error('获取位置列表失败')
-                }
+                //找到对应的父分类Option并关联
+                const targetOption = parentOptions.find(option => option.value === id)
+                targetOption.children = childOptions
+                parentOptions = childOptions
             }
-            else {
-                parent.unshift({ id: 0, name: 'XX公司' })
-            }
+            // for (var i = 0; i < place_id.length; i++) {
+            //     const places = await this.getPlaces(place_id[i])
+            //     const childOptions = places.map(p => ({
+            //         value: p.id,
+            //         label: p.name,
+            //         isLeaf: !p.hasChildren
+            //     }))
 
-            this.setState({ parent })
-
-            if (parent.length !== 1) {
-                //遍历parent，读取当前的所有父位置的列表，并形成options（其中最后一个为当前父位置，不用读）
-                let parentOptions = placeOptions
-                for (var i = 0; i < parent.length - 1; i++) {
-                    const places = await this.getPlaces(parent[i].id)
-                    const childOptions = places.map(p => ({
-                        value: p.id,
-                        label: p.name,
-                        isLeaf: false
-                    }))
-
-                    //找到对应的父分类Option并关联
-                    const targetOption = parentOptions.find(option => option.value === parent[i].id)
-                    targetOption.children = childOptions
-                    parentOptions = childOptions
-                }
-            }
-
+            //     //找到对应的父分类Option并关联
+            //     const targetOption = parentOptions.find(option => option.value === place_id[i])
+            //     targetOption.children = childOptions
+            //     parentOptions = childOptions
+            // }
         }
+        //更新状态
         this.setState({ placeOptions })
     }
 
+    //用户点击级联下拉框相应选项，动态加载下一级
     loadPlaceData = async selectedOptions => {
         const targetOption = selectedOptions[selectedOptions.length - 1];
         targetOption.loading = true;
@@ -181,7 +160,7 @@ class AssetAddUpdate extends Component {
                 const childOptions = places.map(c => ({
                     value: c.id,
                     label: c.name,
-                    isLeaf: false
+                    isLeaf: !c.hasChildren
                 }))
                 targetOption.children = childOptions
             }
@@ -196,6 +175,7 @@ class AssetAddUpdate extends Component {
         }
     }
 
+    //表单提交处理
     onFinish = async (values) => {
         //获取并处理数据
         const {
@@ -230,6 +210,7 @@ class AssetAddUpdate extends Component {
             type = types[0]
             sub_type = types[1]
         }
+        //位置处理
         let place
         if (places.length > 0) {
             place = places[places.length - 1]
@@ -276,17 +257,16 @@ class AssetAddUpdate extends Component {
         //发送请求
         const result = await reqAddOrUpdateAsset(asset)
         if (result.code === "success") {
-            message.success(`${this.isUpdate ? '更新' : '新增' + '资产成功'}`)
+            message.success(`${this.isUpdate ? '更新' : '新增'}资产成功`)
             this.props.history.goBack()
         }
         else {
-            message.error(`${this.isUpdate ? '更新' : '新增' + '资产失败'}`)
+            message.error(`${this.isUpdate ? '更新' : '新增'}资产失败`)
         }
     };
 
     constructor(props) {
         super(props)
-        //this.formAddUpdateRef = React.createRef()
         const asset = this.props.location.state
         this.isUpdate = !!asset
         this.asset = asset || {}
@@ -314,12 +294,12 @@ class AssetAddUpdate extends Component {
                 types.push(asset.sub_type)
             }
         }
-        const places = []
+
+        let places = []
         if (isUpdate) {
-            for (var i = 0; i < parent.length; i++) {
-                places.push(parent[i].id)
-            }
+            places = [...asset.place_obj.parent_ids, asset.place_obj.id]
         }
+
         const title = (
             <span>
                 <Button type='link' onClick={() => { this.props.history.goBack() }}><ArrowLeftOutlined style={{ fontSize: 15 }} /></Button>

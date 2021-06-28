@@ -11,17 +11,9 @@ import {
 import { PlusOutlined } from '@ant-design/icons'
 
 import { reqAssets, reqAsset } from '../../../../api'
+import { PAGE_SIZE, ASSET_TYPES } from '../../../../utils/constant'
 
 const Option = Select.Option
-const asset_types = {
-    PC: 'PC',
-    Printer: '网络打印机',
-    Server: '服务器',
-    NetDevice: '网络设备',
-    SecDevice: '安全设备',
-    Software: '软件'
-}
-const PAGE_SIZE = 3
 
 class AssetHome extends Component {
 
@@ -40,7 +32,7 @@ class AssetHome extends Component {
         {
             title: '资产类型',
             dataIndex: 'type',
-            render: (type) => asset_types[type]
+            render: (type) => ASSET_TYPES[type]
         },
         {
             title: '资产名称',
@@ -56,7 +48,8 @@ class AssetHome extends Component {
         },
         {
             title: '资产位置',
-            dataIndex: 'place',
+            dataIndex: 'place_obj',
+            render: (place_obj) => place_obj.fullname
         },
         {
             title: '使用部门',

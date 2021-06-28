@@ -2,17 +2,11 @@ import React, { Component } from 'react'
 import { Card, Button, Tag, Descriptions } from 'antd'
 import { ArrowLeftOutlined } from '@ant-design/icons'
 
-import { reqCategory } from "../../../../api";
+import { reqCategory } from "../../../../api"
+import { ASSET_TYPES } from '../../../../utils/constant'
 
 const { Item } = Descriptions
-const asset_types = {
-    PC: 'PC',
-    Printer: '网络打印机',
-    Server: '服务器',
-    NetDevice: '网络设备',
-    SecDevice: '安全设备',
-    Software: '软件'
-}
+
 class AssetDetail extends Component {
 
     state = {
@@ -47,10 +41,10 @@ class AssetDetail extends Component {
 
             <Card title={title}>
                 <Descriptions title='基本信息'>
-                    <Item label="资产类型"> {asset_types[asset.type]} {cName ? '/' + cName : null}</Item>
+                    <Item label="资产类型"> {ASSET_TYPES[asset.type]} {cName ? '/' + cName : null}</Item>
                     <Item label="资产名称">{asset.name}</Item>
                     <Item label="状态">{asset.status === 1 ? <Tag color="success">使用中</Tag> : <Tag color="warning">停止使用</Tag>}</Item>
-                    <Item label="设备位置">{asset.place}</Item>
+                    <Item label="设备位置">{asset.place_obj.fullname}</Item>
                     <Item label="使用部门">{asset.use_dept}</Item>
                     <Item label="管理人">{asset.manage_user}</Item>
                     <Item label="型号">{asset.model}</Item>

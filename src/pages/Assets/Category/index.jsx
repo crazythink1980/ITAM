@@ -4,6 +4,7 @@ import { PlusOutlined, ArrowRightOutlined } from '@ant-design/icons'
 
 import LinkButton from '../../../components/LinkButton';
 import { reqCategorys, reqAddCategory, reqUpdateCategory, reqDelCategory } from '../../../api'
+import { CATEGORYS } from '../../../utils/constant'
 
 const Item = Form.Item
 const Option = Select.Option
@@ -19,14 +20,14 @@ class Category extends Component {
         showStatus: 0
     }
 
-    categorys = [
-        { id: 'PC', name: 'PC终端', parent_id: '0' },
-        { id: 'Printer', name: '网络打印机', parent_id: '0' },
-        { id: 'Server', name: '服务器', parent_id: '0' },
-        { id: 'NetDevice', name: '网络设备', parent_id: '0' },
-        { id: 'SecDevice', name: '安全设备', parent_id: '0' },
-        { id: 'Software', name: '软件', parent_id: '0' },
-    ];
+    // categorys = [
+    //     { id: 'PC', name: 'PC终端', parent_id: '0' },
+    //     { id: 'Printer', name: '网络打印机', parent_id: '0' },
+    //     { id: 'Server', name: '服务器', parent_id: '0' },
+    //     { id: 'NetDevice', name: '网络设备', parent_id: '0' },
+    //     { id: 'SecDevice', name: '安全设备', parent_id: '0' },
+    //     { id: 'Software', name: '软件', parent_id: '0' },
+    // ];
 
     formAddRef = React.createRef()
     formUpdateRef = React.createRef()
@@ -208,7 +209,7 @@ class Category extends Component {
                     rowKey='id'
                     loading={loading}
                     bordered
-                    dataSource={parentId === '0' ? this.categorys : subCategorys}
+                    dataSource={parentId === '0' ? CATEGORYS : subCategorys}
                     columns={this.columns}
                 />
 
@@ -222,7 +223,7 @@ class Category extends Component {
                     <Form ref={this.formAddRef} >
                         <Item name="parentId">
                             <Select>
-                                {this.categorys.map(c => <Option value={c.id}>{c.name}</Option>)}
+                                {CATEGORYS.map(c => <Option value={c.id}>{c.name}</Option>)}
                             </Select>
                         </Item>
                         <Item

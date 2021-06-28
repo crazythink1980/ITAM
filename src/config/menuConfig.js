@@ -5,6 +5,7 @@ import {
     BarsOutlined,
     ToolOutlined,
     UserOutlined,
+    BankOutlined,
     SafetyOutlined,
     AreaChartOutlined,
     BarChartOutlined,
@@ -49,7 +50,7 @@ const menuList = [
             {
                 title: '资产位置',
                 key: '/assets/place',
-                icon: <ToolOutlined />
+                icon: <BankOutlined />
             },
 
         ]
