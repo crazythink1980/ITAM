@@ -3,9 +3,9 @@ import { request } from './request'
 const BASE = 'http://localhost:5000'
 
 //用户登录
-export const reqLogin = (username, password) => request(BASE + '/api/user/login', 'POST', { username, password })
+export const reqLogin = (username, password) => request(BASE + '/api/users/login', 'POST', { username, password })
 //获取用户列表
-export const reqUserList = () => request(BASE + '/api/user/', 'GET')
+export const reqUserList = () => request(BASE + '/api/users/', 'GET')
 
 //获取资产分类列表
 export const reqCategorys = (parent_id) => request(BASE + '/api/assettype', 'GET', { parent_id })

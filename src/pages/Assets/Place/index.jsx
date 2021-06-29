@@ -4,7 +4,7 @@ import { PlusOutlined, ArrowRightOutlined } from '@ant-design/icons'
 
 import LinkButton from '../../../components/LinkButton';
 import { COMPANY } from '../../../utils/constant'
-import { reqPlace, reqPlaces, reqAddPlace, reqDelPlace, reqUpdatePlace } from '../../../api'
+import { reqPlaces, reqAddPlace, reqDelPlace, reqUpdatePlace } from '../../../api'
 
 const Item = Form.Item
 
@@ -281,7 +281,7 @@ class Place extends Component {
     }
 
     render() {
-        const { places, loading, parentId, parents, showStatus } = this.state
+        const { places, loading, parents, showStatus } = this.state
         const title = (
             parents.map((p, index) => {
                 //最后一个元素
