@@ -24,19 +24,16 @@ export default function AssetAddUpdate(props) {
   const [typeOptions, setTypeOptions] = useState([]);
   const [placeOptions, setPlaceOptions] = useState([]);
   const [type, setType] = useState("");
-  const assetFromProps = this.props.location.state;
-  const isUpdate = !!assetFromProps;
-  const asset = assetFromProps || {};
+  const [isUpdate] = useState(!!props.location.state);
+  const [asset] = useState(props.location.state || {});
+
   const types = [];
+  let places = [];
   if (isUpdate) {
     types.push(asset.type);
     if (asset.sub_type) {
       types.push(asset.sub_type);
     }
-  }
-
-  let places = [];
-  if (isUpdate) {
     places = [...asset.place_obj.parent_ids, asset.place_obj.id];
   }
 
@@ -45,7 +42,7 @@ export default function AssetAddUpdate(props) {
       <Button
         type="link"
         onClick={() => {
-          this.props.history.goBack();
+          props.history.goBack();
         }}
       >
         <ArrowLeftOutlined style={{ fontSize: 15 }} />
@@ -54,40 +51,6 @@ export default function AssetAddUpdate(props) {
     </span>
   );
 
-  const initTypeOptions = async () => {
-    const initTypeOptions = [];
-    for (var key in ASSET_TYPES) {
-      const option = { value: key, label: ASSET_TYPES[key], isLeaf: false };
-      initTypeOptions.push(option);
-    }
-
-    //如果是编辑资产且存在资产子类
-    const { type, sub_type } = asset;
-    if (isUpdate && sub_type) {
-      //获取资产子类
-      const result = await reqCategorys(type);
-      if (result.code === "success") {
-        //生成子类列表
-        const categorys = result.data;
-
-        const childOptions = categorys.map((c) => ({
-          value: c.id,
-          label: c.name,
-          isLeaf: true,
-        }));
-
-        //找到对应的一级分类Option并关联
-        const targetOption = initTypeOptions.find(
-          (option) => option.value === type
-        );
-        targetOption.children = childOptions;
-      } else {
-        message.error("获取分类列表失败");
-      }
-    }
-    setTypeOptions(initTypeOptions);
-  };
-
   const loadTypeData = async (selectedOptions) => {
     const targetOption = selectedOptions[0];
     targetOption.loading = true;
@@ -95,7 +58,6 @@ export default function AssetAddUpdate(props) {
     const result = await reqCategorys(targetOption.value);
     targetOption.loading = false;
 
-    this.setState({ loading: false });
     if (result.code === "success") {
       const categorys = result.data;
       if (categorys && categorys.length > 0) {
@@ -108,7 +70,7 @@ export default function AssetAddUpdate(props) {
       } else {
         targetOption.isLeaf = true;
       }
-      setTypeOptions(typeOptions);
+      setTypeOptions([...typeOptions]);
     } else {
       message.error("获取分类列表失败");
     }
@@ -132,41 +94,6 @@ export default function AssetAddUpdate(props) {
     }
   };
 
-  //初始化位置级联下拉框的Options
-  const initPlaceOptions = async () => {
-    //初始化最顶端父节点
-    const placeOptions = [{ value: 0, label: "XX公司", isLeaf: false }];
-
-    //如果是编辑资产
-    if (
-      isUpdate &&
-      asset.place_obj &&
-      asset.place_obj.parent_ids &&
-      asset.place_obj.parent_ids.length > 1
-    ) {
-      const place_id = asset.place_obj.parent_ids;
-      //遍历parent，读取当前的所有父位置的列表，并形成options
-      let parentOptions = placeOptions;
-      for (let id of place_id) {
-        const places = await this.getPlaces(id);
-        const childOptions = places.map((p) => ({
-          value: p.id,
-          label: p.name,
-          isLeaf: !p.hasChildren,
-        }));
-
-        //找到对应的父分类Option并关联
-        const targetOption = parentOptions.find(
-          (option) => option.value === id
-        );
-        targetOption.children = childOptions;
-        parentOptions = childOptions;
-      }
-    }
-    //更新状态
-    setPlaceOptions(placeOptions);
-  };
-
   //用户点击级联下拉框相应选项，动态加载下一级
   const loadPlaceData = async (selectedOptions) => {
     const targetOption = selectedOptions[selectedOptions.length - 1];
@@ -174,20 +101,19 @@ export default function AssetAddUpdate(props) {
     const result = await reqPlaces(targetOption.value);
     targetOption.loading = false;
 
-    this.setState({ loading: false });
     if (result.code === "success") {
       const places = result.data;
       if (places && places.length > 0) {
-        const childOptions = places.map((c) => ({
-          value: c.id,
-          label: c.name,
-          isLeaf: !c.hasChildren,
+        const childOptions = places.map((p) => ({
+          value: p.id,
+          label: p.name,
+          isLeaf: !p.hasChildren,
         }));
         targetOption.children = childOptions;
       } else {
         targetOption.isLeaf = true;
       }
-      setPlaceOptions(placeOptions);
+      setPlaceOptions([...placeOptions]);
     } else {
       message.error("获取分类列表失败");
     }
@@ -319,12 +245,79 @@ export default function AssetAddUpdate(props) {
   };
 
   useEffect(() => {
-    if (isUpdate) {
-      setType(props.location.state.type);
-    }
+    //初始化资产类型级联下拉框的Options
+    const initTypeOptions = async () => {
+      const initTypeOptions = [];
+      for (var key in ASSET_TYPES) {
+        const option = { value: key, label: ASSET_TYPES[key], isLeaf: false };
+        initTypeOptions.push(option);
+      }
+
+      //如果是编辑资产且存在资产子类
+      const { type, sub_type } = asset;
+      if (isUpdate && sub_type) {
+        //获取资产子类
+        const result = await reqCategorys(type);
+        if (result.code === "success") {
+          //生成子类列表
+          const categorys = result.data;
+
+          const childOptions = categorys.map((c) => ({
+            value: c.id,
+            label: c.name,
+            isLeaf: true,
+          }));
+
+          //找到对应的一级分类Option并关联
+          const targetOption = initTypeOptions.find(
+            (option) => option.value === type
+          );
+          targetOption.children = childOptions;
+        } else {
+          message.error("获取分类列表失败");
+        }
+      }
+      setTypeOptions(initTypeOptions);
+    };
+
+    //初始化位置级联下拉框的Options
+    const initPlaceOptions = async () => {
+      //初始化最顶端父节点
+      const placeOptions = [{ value: 0, label: "XX公司", isLeaf: false }];
+
+      //如果是编辑资产
+      if (
+        isUpdate &&
+        asset.place_obj &&
+        asset.place_obj.parent_ids &&
+        asset.place_obj.parent_ids.length > 1
+      ) {
+        const place_id = asset.place_obj.parent_ids;
+        //遍历parent，读取当前的所有父位置的列表，并形成options
+        let parentOptions = placeOptions;
+        for (let id of place_id) {
+          const places = await getPlaces(id);
+          const childOptions = places.map((p) => ({
+            value: p.id,
+            label: p.name,
+            isLeaf: !p.hasChildren,
+          }));
+
+          //找到对应的父分类Option并关联
+          const targetOption = parentOptions.find(
+            (option) => option.value === id
+          );
+          targetOption.children = childOptions;
+          parentOptions = childOptions;
+        }
+      }
+      //更新状态
+      setPlaceOptions([...placeOptions]);
+    };
+
     initTypeOptions();
     initPlaceOptions();
-  }, []);
+  }, [asset, isUpdate]);
 
   return (
     <Card title={title}>
